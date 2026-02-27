@@ -1,0 +1,29 @@
+{
+    "id": "local-dev-env",
+    "name": "Digital Diary Local Dev",
+    "values": [
+        {
+            "key": "API_KEY",
+            "value": "AIzaSyBssSGS97fxQwU8-aI7g7bk9Q02EG1hPrY",
+            "enabled": true
+        },
+        {
+            "key": "PROJECT_ID",
+            "value": "digitaldiaryapp-591c2",
+            "enabled": true
+        },
+        {
+            "key": "ANDROID_APP_ID",
+            "value": "1:827108928293:android:1cd035e69d3baef87e88cc",
+            "enabled": true
+        },
+        {
+            "key": "IOS_BUNDLE_ID",
+            "value": "com.dincerefe.digitaldiary",
+            "enabled": true
+        }
+    ],
+    "_postman_variable_scope": "environment",
+    "_postman_exported_at": "2024-12-16T21:55:00.000Z",
+    "_postman_exported_using": "Postman/10.0.0"
+}

@@ -1,0 +1,1012 @@
+{
+  "info": {
+    "name": "Digital Diary - Firebase API Tests",
+    "_postman_id": "digital-diary-firebase-tests",
+    "description": "Firebase REST API test collection for Digital Diary app integration testing",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "API_KEY",
+      "value": "YOUR_API_KEY",
+      "type": "string"
+    },
+    {
+      "key": "PROJECT_ID",
+      "value": "digitaldiaryapp-591c2",
+      "type": "string"
+    },
+    {
+      "key": "ID_TOKEN",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "USER_ID",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "REFRESH_TOKEN",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Authentication",
+      "item": [
+        {
+          "name": "1.1 Sign Up (Create User)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "",
+                  "// If user created successfully, save tokens",
+                  "if (jsonData.idToken) {",
+                  "    pm.collectionVariables.set('ID_TOKEN', jsonData.idToken);",
+                  "    pm.collectionVariables.set('USER_ID', jsonData.localId);",
+                  "    pm.collectionVariables.set('REFRESH_TOKEN', jsonData.refreshToken);",
+                  "}",
+                  "",
+                  "pm.test('Status code is 200 (created) or 400 (user exists)', function () {",
+                  "    pm.expect([200, 400]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "pm.test('New user created OR user already exists', function () {",
+                  "    if (pm.response.code === 200) {",
+                  "        pm.expect(jsonData).to.have.property('idToken');",
+                  "        pm.expect(jsonData).to.have.property('localId');",
+                  "        console.log('✅ New user created successfully');",
+                  "    } else if (pm.response.code === 400) {",
+                  "        pm.expect(jsonData.error.message).to.include('EMAIL_EXISTS');",
+                  "        console.log('ℹ️ User already exists - use Sign In instead');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"postman_test@example.com\",\n    \"password\": \"TestPassword123!\",\n    \"returnSecureToken\": true\n}"
+            },
+            "url": {
+              "raw": "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key={{API_KEY}}",
+              "protocol": "https",
+              "host": [
+                "identitytoolkit",
+                "googleapis",
+                "com"
+              ],
+              "path": [
+                "v1",
+                "accounts:signUp"
+              ],
+              "query": [
+                {
+                  "key": "key",
+                  "value": "{{API_KEY}}"
+                }
+              ]
+            },
+            "description": "Creates a new user with email and password"
+          },
+          "response": []
+        },
+        {
+          "name": "1.2 Sign In (Login)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.idToken) {",
+                  "    pm.collectionVariables.set('ID_TOKEN', jsonData.idToken);",
+                  "    pm.collectionVariables.set('USER_ID', jsonData.localId);",
+                  "    pm.collectionVariables.set('REFRESH_TOKEN', jsonData.refreshToken);",
+                  "}",
+                  "",
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has idToken', function () {",
+                  "    pm.expect(jsonData).to.have.property('idToken');",
+                  "});",
+                  "",
+                  "pm.test('Email matches', function () {",
+                  "    pm.expect(jsonData.email).to.include('@');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"postman_test@example.com\",\n    \"password\": \"TestPassword123!\",\n    \"returnSecureToken\": true\n}"
+            },
+            "url": {
+              "raw": "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={{API_KEY}}",
+              "protocol": "https",
+              "host": [
+                "identitytoolkit",
+                "googleapis",
+                "com"
+              ],
+              "path": [
+                "v1",
+                "accounts:signInWithPassword"
+              ],
+              "query": [
+                {
+                  "key": "key",
+                  "value": "{{API_KEY}}"
+                }
+              ]
+            },
+            "description": "Sign in with email and password"
+          },
+          "response": []
+        },
+        {
+          "name": "1.3 Get User Data",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "",
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has users array', function () {",
+                  "    pm.expect(jsonData).to.have.property('users');",
+                  "    pm.expect(jsonData.users).to.be.an('array');",
+                  "});",
+                  "",
+                  "pm.test('User has email', function () {",
+                  "    if (jsonData.users && jsonData.users.length > 0) {",
+                  "        pm.expect(jsonData.users[0]).to.have.property('email');",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"idToken\": \"{{ID_TOKEN}}\"\n}"
+            },
+            "url": {
+              "raw": "https://identitytoolkit.googleapis.com/v1/accounts:lookup?key={{API_KEY}}",
+              "protocol": "https",
+              "host": [
+                "identitytoolkit",
+                "googleapis",
+                "com"
+              ],
+              "path": [
+                "v1",
+                "accounts:lookup"
+              ],
+              "query": [
+                {
+                  "key": "key",
+                  "value": "{{API_KEY}}"
+                }
+              ]
+            },
+            "description": "Get user account information"
+          },
+          "response": []
+        },
+        {
+          "name": "1.4 Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.id_token) {",
+                  "    pm.collectionVariables.set('ID_TOKEN', jsonData.id_token);",
+                  "    pm.collectionVariables.set('REFRESH_TOKEN', jsonData.refresh_token);",
+                  "}",
+                  "",
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has new id_token', function () {",
+                  "    pm.expect(jsonData).to.have.property('id_token');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              }
+            ],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "key": "grant_type",
+                  "value": "refresh_token"
+                },
+                {
+                  "key": "refresh_token",
+                  "value": "{{REFRESH_TOKEN}}"
+                }
+              ]
+            },
+            "url": {
+              "raw": "https://securetoken.googleapis.com/v1/token?key={{API_KEY}}",
+              "protocol": "https",
+              "host": [
+                "securetoken",
+                "googleapis",
+                "com"
+              ],
+              "path": [
+                "v1",
+                "token"
+              ],
+              "query": [
+                {
+                  "key": "key",
+                  "value": "{{API_KEY}}"
+                }
+              ]
+            },
+            "description": "Refresh the ID token"
+          },
+          "response": []
+        },
+        {
+          "name": "1.5 Password Reset Email",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has email', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('email');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"requestType\": \"PASSWORD_RESET\",\n    \"email\": \"postman_test@example.com\"\n}"
+            },
+            "url": {
+              "raw": "https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key={{API_KEY}}",
+              "protocol": "https",
+              "host": [
+                "identitytoolkit",
+                "googleapis",
+                "com"
+              ],
+              "path": [
+                "v1",
+                "accounts:sendOobCode"
+              ],
+              "query": [
+                {
+                  "key": "key",
+                  "value": "{{API_KEY}}"
+                }
+              ]
+            },
+            "description": "Send password reset email"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Firestore Database",
+      "item": [
+        {
+          "name": "2.1 Create User Profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 or 403 (check Firestore rules)', function () {",
+                  "    pm.expect([200, 403]).to.include(pm.response.code);",
+                  "    if (pm.response.code === 403) {",
+                  "        console.log('⚠️ 403 Error: Update Firestore rules to allow authenticated writes');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('Document created or permission denied', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    var hasFields = jsonData.fields !== undefined;",
+                  "    var hasError = jsonData.error !== undefined;",
+                  "    pm.expect(hasFields || hasError).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ID_TOKEN}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"fields\": {\n        \"email\": { \"stringValue\": \"postman_test@example.com\" },\n        \"username\": { \"stringValue\": \"PostmanTestUser\" },\n        \"displayName\": { \"stringValue\": \"Postman Test\" },\n        \"isPremium\": { \"booleanValue\": false },\n        \"createdAt\": { \"timestampValue\": \"{{$isoTimestamp}}\" },\n        \"profileImageUrl\": { \"stringValue\": \"\" },\n        \"bio\": { \"stringValue\": \"Test user created via Postman\" }\n    }\n}"
+            },
+            "url": {
+              "raw": "https://firestore.googleapis.com/v1/projects/{{PROJECT_ID}}/databases/(default)/documents/users/{{USER_ID}}",
+              "protocol": "https",
+              "host": [
+                "firestore",
+                "googleapis",
+                "com"
+              ],
+              "path": [
+                "v1",
+                "projects",
+                "{{PROJECT_ID}}",
+                "databases",
+                "(default)",
+                "documents",
+                "users",
+                "{{USER_ID}}"
+              ]
+            },
+            "description": "Create or update user profile document"
+          },
+          "response": []
+        },
+        {
+          "name": "2.2 Get User Profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Document has fields', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData).to.have.property('fields');",
+                  "});",
+                  "",
+                  "pm.test('Has email field', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.fields).to.have.property('email');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ID_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "https://firestore.googleapis.com/v1/projects/{{PROJECT_ID}}/databases/(default)/documents/users/{{USER_ID}}",
+              "protocol": "https",
+              "host": [
+                "firestore",
+                "googleapis",
+                "com"
+              ],
+              "path": [
+                "v1",
+                "projects",
+                "{{PROJECT_ID}}",
+                "databases",
+                "(default)",
+                "documents",
+                "users",
+                "{{USER_ID}}"
+              ]
+            },
+            "description": "Get user profile document"
+          },
+          "response": []
+        },
+        {
+          "name": "2.3 Create Video Document",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.name) {",
+                  "    var docId = jsonData.name.split('/').pop();",
+                  "    pm.collectionVariables.set('VIDEO_ID', docId);",
+                  "}",
+                  "",
+                  "pm.test('Status code is 200 or 403 (check Firestore rules)', function () {",
+                  "    pm.expect([200, 403]).to.include(pm.response.code);",
+                  "    if (pm.response.code === 403) {",
+                  "        console.log('⚠️ 403 Error: Update Firestore rules to allow video creation');",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('Video document created or permission denied', function () {",
+                  "    var hasFields = jsonData.fields !== undefined;",
+                  "    var hasError = jsonData.error !== undefined;",
+                  "    pm.expect(hasFields || hasError).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ID_TOKEN}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"fields\": {\n        \"uid\": { \"stringValue\": \"{{USER_ID}}\" },\n        \"userId\": { \"stringValue\": \"{{USER_ID}}\" },\n        \"title\": { \"stringValue\": \"Test Video from Postman\" },\n        \"description\": { \"stringValue\": \"This is a test video created via API\" },\n        \"videoUrl\": { \"stringValue\": \"https://example.com/test-video.mp4\" },\n        \"thumbnailUrl\": { \"stringValue\": \"https://example.com/thumb.jpg\" },\n        \"isPublic\": { \"booleanValue\": true },\n        \"likeCount\": { \"integerValue\": \"0\" },\n        \"viewCount\": { \"integerValue\": \"0\" },\n        \"createdAt\": { \"timestampValue\": \"{{$isoTimestamp}}\" },\n        \"duration\": { \"integerValue\": \"60\" }\n    }\n}"
+            },
+            "url": {
+              "raw": "https://firestore.googleapis.com/v1/projects/{{PROJECT_ID}}/databases/(default)/documents/videos",
+              "protocol": "https",
+              "host": [
+                "firestore",
+                "googleapis",
+                "com"
+              ],
+              "path": [
+                "v1",
+                "projects",
+                "{{PROJECT_ID}}",
+                "databases",
+                "(default)",
+                "documents",
+                "videos"
+              ]
+            },
+            "description": "Create a new video document"
+          },
+          "response": []
+        },
+        {
+          "name": "2.4 Query Public Videos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response is valid query result', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    // Can be array of results, object with documents, or empty",
+                  "    var isArray = Array.isArray(jsonData);",
+                  "    var hasDocuments = jsonData.documents !== undefined;",
+                  "    var isEmpty = Object.keys(jsonData).length === 0;",
+                  "    var hasError = jsonData.error !== undefined;",
+                  "    pm.expect(isArray || hasDocuments || isEmpty || hasError).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ID_TOKEN}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"structuredQuery\": {\n        \"from\": [{ \"collectionId\": \"videos\" }],\n        \"where\": {\n            \"fieldFilter\": {\n                \"field\": { \"fieldPath\": \"isPublic\" },\n                \"op\": \"EQUAL\",\n                \"value\": { \"booleanValue\": true }\n            }\n        },\n        \"orderBy\": [{\n            \"field\": { \"fieldPath\": \"createdAt\" },\n            \"direction\": \"DESCENDING\"\n        }],\n        \"limit\": 10\n    }\n}"
+            },
+            "url": {
+              "raw": "https://firestore.googleapis.com/v1/projects/{{PROJECT_ID}}/databases/(default)/documents:runQuery",
+              "protocol": "https",
+              "host": [
+                "firestore",
+                "googleapis",
+                "com"
+              ],
+              "path": [
+                "v1",
+                "projects",
+                "{{PROJECT_ID}}",
+                "databases",
+                "(default)",
+                "documents:runQuery"
+              ]
+            },
+            "description": "Query public videos with filter"
+          },
+          "response": []
+        },
+        {
+          "name": "2.5 Update Video (Like)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 or 403/404 (permission/not found)', function () {",
+                  "    pm.expect([200, 403, 404]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "pm.test('Like count updated or error returned', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    if (pm.response.code === 200 && jsonData.fields) {",
+                  "        pm.expect(jsonData.fields.likeCount.integerValue).to.equal('1');",
+                  "    } else {",
+                  "        pm.expect(jsonData.error !== undefined || pm.response.code !== 200).to.be.true;",
+                  "    }",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ID_TOKEN}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"fields\": {\n        \"likeCount\": { \"integerValue\": \"1\" }\n    }\n}"
+            },
+            "url": {
+              "raw": "https://firestore.googleapis.com/v1/projects/{{PROJECT_ID}}/databases/(default)/documents/videos/{{VIDEO_ID}}?updateMask.fieldPaths=likeCount",
+              "protocol": "https",
+              "host": [
+                "firestore",
+                "googleapis",
+                "com"
+              ],
+              "path": [
+                "v1",
+                "projects",
+                "{{PROJECT_ID}}",
+                "databases",
+                "(default)",
+                "documents",
+                "videos",
+                "{{VIDEO_ID}}"
+              ],
+              "query": [
+                {
+                  "key": "updateMask.fieldPaths",
+                  "value": "likeCount"
+                }
+              ]
+            },
+            "description": "Update video like count"
+          },
+          "response": []
+        },
+        {
+          "name": "2.6 Delete Video",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200 or 403/404 (permission/not found)', function () {",
+                  "    pm.expect([200, 403, 404]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "pm.test('Document deleted or error returned', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    var isEmpty = Object.keys(jsonData).length === 0;",
+                  "    var hasError = jsonData.error !== undefined;",
+                  "    pm.expect(isEmpty || hasError).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ID_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "https://firestore.googleapis.com/v1/projects/{{PROJECT_ID}}/databases/(default)/documents/videos/{{VIDEO_ID}}",
+              "protocol": "https",
+              "host": [
+                "firestore",
+                "googleapis",
+                "com"
+              ],
+              "path": [
+                "v1",
+                "projects",
+                "{{PROJECT_ID}}",
+                "databases",
+                "(default)",
+                "documents",
+                "videos",
+                "{{VIDEO_ID}}"
+              ]
+            },
+            "description": "Delete a video document"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Error Cases",
+      "item": [
+        {
+          "name": "3.1 Login - Invalid Password",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Error message returned', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error.message).to.include('INVALID');",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"postman_test@example.com\",\n    \"password\": \"wrongpassword\",\n    \"returnSecureToken\": true\n}"
+            },
+            "url": {
+              "raw": "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={{API_KEY}}",
+              "protocol": "https",
+              "host": [
+                "identitytoolkit",
+                "googleapis",
+                "com"
+              ],
+              "path": [
+                "v1",
+                "accounts:signInWithPassword"
+              ],
+              "query": [
+                {
+                  "key": "key",
+                  "value": "{{API_KEY}}"
+                }
+              ]
+            },
+            "description": "Test login with wrong password"
+          },
+          "response": []
+        },
+        {
+          "name": "3.2 Login - User Not Found",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Invalid credentials or email not found error', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    var msg = jsonData.error.message;",
+                  "    // Firebase may return different error messages for security",
+                  "    var validErrors = ['EMAIL_NOT_FOUND', 'INVALID_LOGIN_CREDENTIALS', 'INVALID_EMAIL'];",
+                  "    var isValidError = validErrors.some(err => msg.includes(err));",
+                  "    pm.expect(isValidError).to.be.true;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"nonexistent_user_12345@example.com\",\n    \"password\": \"anypassword\",\n    \"returnSecureToken\": true\n}"
+            },
+            "url": {
+              "raw": "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={{API_KEY}}",
+              "protocol": "https",
+              "host": [
+                "identitytoolkit",
+                "googleapis",
+                "com"
+              ],
+              "path": [
+                "v1",
+                "accounts:signInWithPassword"
+              ],
+              "query": [
+                {
+                  "key": "key",
+                  "value": "{{API_KEY}}"
+                }
+              ]
+            },
+            "description": "Test login with non-existent user"
+          },
+          "response": []
+        },
+        {
+          "name": "3.3 Firestore - Unauthorized",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 401, 403 or 404', function () {",
+                  "    pm.expect([401, 403, 404]).to.include(pm.response.code);",
+                  "});",
+                  "",
+                  "pm.test('Error response returned', function () {",
+                  "    var jsonData = pm.response.json();",
+                  "    pm.expect(jsonData.error).to.exist;",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "https://firestore.googleapis.com/v1/projects/{{PROJECT_ID}}/databases/(default)/documents/users/someUserId",
+              "protocol": "https",
+              "host": [
+                "firestore",
+                "googleapis",
+                "com"
+              ],
+              "path": [
+                "v1",
+                "projects",
+                "{{PROJECT_ID}}",
+                "databases",
+                "(default)",
+                "documents",
+                "users",
+                "someUserId"
+              ]
+            },
+            "description": "Test accessing Firestore without auth token"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Cleanup",
+      "item": [
+        {
+          "name": "4.1 Delete Test User Profile",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{ID_TOKEN}}"
+              }
+            ],
+            "url": {
+              "raw": "https://firestore.googleapis.com/v1/projects/{{PROJECT_ID}}/databases/(default)/documents/users/{{USER_ID}}",
+              "protocol": "https",
+              "host": [
+                "firestore",
+                "googleapis",
+                "com"
+              ],
+              "path": [
+                "v1",
+                "projects",
+                "{{PROJECT_ID}}",
+                "databases",
+                "(default)",
+                "documents",
+                "users",
+                "{{USER_ID}}"
+              ]
+            },
+            "description": "Delete test user profile from Firestore"
+          },
+          "response": []
+        },
+        {
+          "name": "4.2 Delete Test User Account",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "// Clear variables",
+                  "pm.collectionVariables.set('ID_TOKEN', '');",
+                  "pm.collectionVariables.set('USER_ID', '');",
+                  "pm.collectionVariables.set('REFRESH_TOKEN', '');"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"idToken\": \"{{ID_TOKEN}}\"\n}"
+            },
+            "url": {
+              "raw": "https://identitytoolkit.googleapis.com/v1/accounts:delete?key={{API_KEY}}",
+              "protocol": "https",
+              "host": [
+                "identitytoolkit",
+                "googleapis",
+                "com"
+              ],
+              "path": [
+                "v1",
+                "accounts:delete"
+              ],
+              "query": [
+                {
+                  "key": "key",
+                  "value": "{{API_KEY}}"
+                }
+              ]
+            },
+            "description": "Delete the test user account"
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

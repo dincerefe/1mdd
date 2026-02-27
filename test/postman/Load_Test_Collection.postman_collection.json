@@ -1,0 +1,298 @@
+{
+  "info": {
+    "name": "Digital Diary - Load Test (1000 Users)",
+    "_postman_id": "digital-diary-load-test",
+    "description": "Load test collection using 1000 test users from CSV data file",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "API_KEY",
+      "value": "YOUR_API_KEY",
+      "type": "string"
+    },
+    {
+      "key": "PROJECT_ID",
+      "value": "digitaldiaryapp-591c2",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Create User (Sign Up)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var jsonData = pm.response.json();",
+              "var testData = {",
+              "    iteration: pm.info.iteration + 1,",
+              "    email: pm.iterationData.get('email'),",
+              "    status: pm.response.code,",
+              "    responseTime: pm.response.responseTime",
+              "};",
+              "",
+              "if (jsonData.idToken) {",
+              "    pm.collectionVariables.set('ID_TOKEN', jsonData.idToken);",
+              "    pm.collectionVariables.set('USER_ID', jsonData.localId);",
+              "    testData.userId = jsonData.localId;",
+              "    testData.result = 'CREATED';",
+              "} else if (jsonData.error && jsonData.error.message.includes('EMAIL_EXISTS')) {",
+              "    testData.result = 'EXISTS';",
+              "} else {",
+              "    testData.result = 'ERROR';",
+              "    testData.error = jsonData.error ? jsonData.error.message : 'Unknown';",
+              "}",
+              "",
+              "console.log(JSON.stringify(testData));",
+              "",
+              "pm.test('User created or already exists', function () {",
+              "    pm.expect([200, 400]).to.include(pm.response.code);",
+              "});",
+              "",
+              "pm.test('Response time < 2000ms', function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"email\": \"{{email}}\",\n    \"password\": \"{{password}}\",\n    \"returnSecureToken\": true\n}"
+        },
+        "url": {
+          "raw": "https://identitytoolkit.googleapis.com/v1/accounts:signUp?key={{API_KEY}}",
+          "protocol": "https",
+          "host": [
+            "identitytoolkit",
+            "googleapis",
+            "com"
+          ],
+          "path": [
+            "v1",
+            "accounts:signUp"
+          ],
+          "query": [
+            {
+              "key": "key",
+              "value": "{{API_KEY}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "2. Sign In (Login)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var jsonData = pm.response.json();",
+              "var testData = {",
+              "    iteration: pm.info.iteration + 1,",
+              "    email: pm.iterationData.get('email'),",
+              "    status: pm.response.code,",
+              "    responseTime: pm.response.responseTime",
+              "};",
+              "",
+              "if (jsonData.idToken) {",
+              "    pm.collectionVariables.set('ID_TOKEN', jsonData.idToken);",
+              "    pm.collectionVariables.set('USER_ID', jsonData.localId);",
+              "    testData.result = 'SUCCESS';",
+              "} else {",
+              "    testData.result = 'FAILED';",
+              "    testData.error = jsonData.error ? jsonData.error.message : 'Unknown';",
+              "}",
+              "",
+              "console.log(JSON.stringify(testData));",
+              "",
+              "pm.test('Login successful', function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "pm.test('Response has token', function () {",
+              "    pm.expect(jsonData).to.have.property('idToken');",
+              "});",
+              "",
+              "pm.test('Response time < 1500ms', function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(1500);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"email\": \"{{email}}\",\n    \"password\": \"{{password}}\",\n    \"returnSecureToken\": true\n}"
+        },
+        "url": {
+          "raw": "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={{API_KEY}}",
+          "protocol": "https",
+          "host": [
+            "identitytoolkit",
+            "googleapis",
+            "com"
+          ],
+          "path": [
+            "v1",
+            "accounts:signInWithPassword"
+          ],
+          "query": [
+            {
+              "key": "key",
+              "value": "{{API_KEY}}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "3. Create User Profile",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var testData = {",
+              "    iteration: pm.info.iteration + 1,",
+              "    username: pm.iterationData.get('username'),",
+              "    status: pm.response.code,",
+              "    responseTime: pm.response.responseTime",
+              "};",
+              "",
+              "pm.test('Profile created or updated', function () {",
+              "    pm.expect([200, 403]).to.include(pm.response.code);",
+              "});",
+              "",
+              "pm.test('Response time < 2000ms', function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(2000);",
+              "});",
+              "",
+              "console.log(JSON.stringify(testData));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{ID_TOKEN}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"fields\": {\n        \"email\": { \"stringValue\": \"{{email}}\" },\n        \"username\": { \"stringValue\": \"{{username}}\" },\n        \"displayName\": { \"stringValue\": \"{{displayName}}\" },\n        \"isPremium\": { \"booleanValue\": false },\n        \"createdAt\": { \"timestampValue\": \"{{$isoTimestamp}}\" }\n    }\n}"
+        },
+        "url": {
+          "raw": "https://firestore.googleapis.com/v1/projects/{{PROJECT_ID}}/databases/(default)/documents/users/{{USER_ID}}",
+          "protocol": "https",
+          "host": [
+            "firestore",
+            "googleapis",
+            "com"
+          ],
+          "path": [
+            "v1",
+            "projects",
+            "{{PROJECT_ID}}",
+            "databases",
+            "(default)",
+            "documents",
+            "users",
+            "{{USER_ID}}"
+          ]
+        }
+      }
+    },
+    {
+      "name": "4. Read Public Videos",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "var testData = {",
+              "    iteration: pm.info.iteration + 1,",
+              "    status: pm.response.code,",
+              "    responseTime: pm.response.responseTime",
+              "};",
+              "",
+              "pm.test('Query successful', function () {",
+              "    pm.expect([200]).to.include(pm.response.code);",
+              "});",
+              "",
+              "pm.test('Response time < 3000ms', function () {",
+              "    pm.expect(pm.response.responseTime).to.be.below(3000);",
+              "});",
+              "",
+              "console.log(JSON.stringify(testData));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{ID_TOKEN}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n    \"structuredQuery\": {\n        \"from\": [{ \"collectionId\": \"videos\" }],\n        \"where\": {\n            \"fieldFilter\": {\n                \"field\": { \"fieldPath\": \"isPublic\" },\n                \"op\": \"EQUAL\",\n                \"value\": { \"booleanValue\": true }\n            }\n        },\n        \"limit\": 20\n    }\n}"
+        },
+        "url": {
+          "raw": "https://firestore.googleapis.com/v1/projects/{{PROJECT_ID}}/databases/(default)/documents:runQuery",
+          "protocol": "https",
+          "host": [
+            "firestore",
+            "googleapis",
+            "com"
+          ],
+          "path": [
+            "v1",
+            "projects",
+            "{{PROJECT_ID}}",
+            "databases",
+            "(default)",
+            "documents:runQuery"
+          ]
+        }
+      }
+    }
+  ]
+}

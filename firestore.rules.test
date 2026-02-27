@@ -1,0 +1,59 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    
+    // Users collection
+    match /users/{userId} {
+      // Anyone can read user profiles
+      allow read: if true;
+      // Users can only write their own profile
+      allow write: if isOwner(userId);
+    }
+    
+    // Videos collection
+    match /videos/{videoId} {
+      // Anyone can read videos (for public feed)
+      allow read: if true;
+      
+      // Users can create their own videos
+      // Accepts both 'uid' and 'userId' field names
+      allow create: if isSignedIn() && (
+        request.resource.data.uid == request.auth.uid ||
+        request.resource.data.userId == request.auth.uid
+      );
+      
+      // Users can update their own videos
+      // OR any authenticated user can update the 'likes' or 'likeCount' field
+      allow update: if isSignedIn() && (
+        // Owner can update everything (check both uid and userId)
+        resource.data.uid == request.auth.uid ||
+        resource.data.userId == request.auth.uid ||
+        // Any user can only update likes/likeCount fields
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['likes', 'likeCount', 'viewCount'])
+      );
+      
+      // Users can delete their own videos
+      allow delete: if isSignedIn() && (
+        resource.data.uid == request.auth.uid ||
+        resource.data.userId == request.auth.uid
+      );
+    }
+    
+    // Integration tests collection (for Postman/testing only)
+    // ⚠️ REMOVE IN PRODUCTION
+    match /integration_tests/{docId} {
+      allow read, write: if isSignedIn();
+    }
+  }
+}

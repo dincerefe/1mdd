@@ -1,0 +1,88 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+.linux/
+.macos/
+.windows/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+
+# Firebase and sensitive files - DO NOT COMMIT
+firebase.json
+
+google-services.json
+**/google-services.json
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+**/GoogleService-Info.plist
+android/key.properties
+android/*.jks
+android/*.keystore
+*.jks
+*.keystore
+
+# Environment files
+
+.env
+.env.*
+*.key
+*.pem
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Postman Local Environment
+postman/local_env.json
+
+
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# NDK/Native builds
+android/app/.cxx/
+android/app/build/
+.cxx/
+*.so
+*.o
+obj/
+libs/
+
+# Generated APKs and bundles (optional - remove if you want to commit releases)
+*.apk
+*.aab
+*.ipa
